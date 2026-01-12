@@ -49,7 +49,7 @@ function App() {
     fullscreen: false,
     config: {
       quality: String(IS_HIGH_END_DEVICE ? QUALITY_HIGH : QUALITY_NORMAL),
-      shell: "Random",
+      shell: "HeartName",
       size: IS_DESKTOP ? "3" : IS_HEADER ? "1.2" : "2",
       autoLaunch: true,
       finale: false,
@@ -57,6 +57,7 @@ function App() {
       hideControls: IS_HEADER,
       longExposure: false,
       scaleFactor: getDefaultScaleFactor(),
+      customText: "Hieu",
     },
   });
 

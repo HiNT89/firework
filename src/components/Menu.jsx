@@ -1,6 +1,6 @@
 import React from "react";
 
-const shellTypes = ["Random", "Crackle", "Palm", "Ring", "Heart", "Text"];
+const shellTypes = ["Random", "Crackle", "Palm", "Ring", "Heart", "HeartName"];
 const shellSizes = [
   { value: "1", label: "Small" },
   { value: "2", label: "Normal" },
@@ -65,6 +65,20 @@ function Menu({ isOpen, config, onClose, onConfigChange, onHelpClick }) {
               ))}
             </select>
           </div>
+
+          {config.shell === "HeartName" && (
+            <div className="form-option">
+              <label className="custom-text-label">Heart Text</label>
+              <input
+                className="custom-text"
+                type="text"
+                value={config.customText || ""}
+                onChange={handleSelectChange("customText")}
+                placeholder="Text inside heart"
+                maxLength="10"
+              />
+            </div>
+          )}
 
           <div className="form-option form-option--select">
             <label

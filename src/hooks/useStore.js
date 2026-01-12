@@ -16,6 +16,7 @@ export function useStore(initialState) {
               size: data.size,
               skyLighting: data.skyLighting,
               scaleFactor: data.scaleFactor,
+              customText: "LOVE",
             },
           };
         }
@@ -38,6 +39,7 @@ export function useStore(initialState) {
           size: config.size,
           skyLighting: config.skyLighting,
           scaleFactor: config.scaleFactor,
+          customText: config.customText,
         },
       })
     );

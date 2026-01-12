@@ -116,7 +116,7 @@ const store = {
     // at render time, and parsing on change.
     config: {
       quality: String(IS_HIGH_END_DEVICE ? QUALITY_HIGH : QUALITY_NORMAL), // will be mirrored to a global variable named `quality` in `configDidUpdate`, for perf.
-      shell: "Random",
+      shell: "HeartName",
       size: IS_DESKTOP
         ? "3" // Desktop default
         : IS_HEADER
@@ -774,23 +774,21 @@ const heartShell = (size = 1) => {
   };
 };
 
-const textShell = (size = 1) => {
-  const color = randomColor({ limitWhite: true });
-  const animations = ["static", "wave", "rotate", "pulse"];
-  const randomAnimation =
-    animations[Math.floor(Math.random() * animations.length)];
+const heartNameShell = (size = 1) => {
+  const heartColor = Math.random() < 0.8 ? COLOR.Red : COLOR.Purple;
+  const textColor = Math.random() < 0.6 ? COLOR.White : COLOR.Gold;
 
   return {
     shellSize: size,
-    text: true,
-    textContent: "Hieu",
-    textAnimation: randomAnimation,
-    color,
+    heartName: true,
+    color: heartColor,
+    textColor: textColor,
+    textContent: store.state.config.customText || "LOVE",
     spreadSize: 320 + size * 100,
     starDensity: 1.0,
-    starLife: 1500 + size * 250,
-    glitter: Math.random() < 0.5 ? "light" : "",
-    glitterColor: whiteOrGold(),
+    starLife: 1400 + size * 220,
+    glitter: Math.random() < 0.4 ? "light" : "",
+    glitterColor: COLOR.White,
   };
 };
 
@@ -835,11 +833,11 @@ const shellTypes = {
   Floral: floralShell,
   Ghost: ghostShell,
   Heart: heartShell,
+  HeartName: heartNameShell,
   "Horse Tail": horsetailShell,
   Palm: palmShell,
   Ring: ringShell,
   Strobe: strobeShell,
-  Text: textShell,
   Willow: willowShell,
 };
 
@@ -1846,86 +1844,80 @@ class Shell {
     return points;
   }
 
-  getTextPattern() {
+  getHeartNamePattern() {
     const points = [];
-    const scale = 0.6 + this.shellSize * 0.15;
-    const spacing = 0.15;
-    const animationMode = this.textAnimation || "static";
+    const scale = 0.8 + this.shellSize * 0.2;
 
-    // Simple pixel art for "Hieu" text
-    const textPixels = [
-      // H
+    // Heart outline points
+    for (let t = 0; t < PI_2; t += 0.2) {
+      const x = 16 * Math.pow(Math.sin(t), 3) * scale * 0.02;
+      const y =
+        (13 * Math.cos(t) -
+          5 * Math.cos(2 * t) -
+          2 * Math.cos(3 * t) -
+          Math.cos(4 * t)) *
+        scale *
+        0.02;
+      points.push({ x, y, type: "heart" });
+    }
+
+    // Custom text coordinates - you can modify these coordinates
+    const textScale = scale * 0.02;
+    const customTextPoints = [
+      // Example: Simple "LOVE" pattern - modify these coordinates as needed
+      // [-6, 2],
+      // [-6, 1],
+      // [-6, 0],
+      // [-6, -1],
+      // [-6, -2],
+      // [-5, -2],
+      // [-4, -2], // L
+      // [-2, 1],
+      // [-2, 0],
+      // [-2, -1],
+      // [-1, 2],
+      // [-1, -2],
+      // [0, 2],
+      // [0, -2],
+      // [1, 1],
+      // [1, 0],
+      // [1, -1], // O
+      // [3, 2],
+      // [3, 1],
+      // [3, 0],
+      // [4, -1],
+      // [5, 2],
+      // [5, 1],
+      // [5, 0], // V
+      // [7, 2],
+      // [7, 1],
+      // [7, 0],
+      // [7, -1],
+      // [7, -2],
+      // [8, 2],
+      // [8, 0],
+      // [8, -2],
+      // [9, 2],
+      // [9, 0],
+      // [9, -2], //
       [0, 0],
       [0, 1],
       [0, 2],
       [0, 3],
       [0, 4],
       [1, 2],
-      [2, 0],
-      [2, 1],
       [2, 2],
-      [2, 3],
-      [2, 4],
-
-      // i
+      [3, 2],
       [4, 0],
       [4, 1],
       [4, 2],
       [4, 3],
-      [4, 4],
-
-      // e
-      [6, 1],
-      [6, 2],
-      [6, 3],
-      [6, 4],
-      [7, 1],
-      [7, 2],
-      [7, 4],
-      [8, 1],
-      [8, 2],
-      [8, 4],
-
-      // u
-      [10, 1],
-      [10, 2],
-      [10, 3],
-      [10, 4],
-      [11, 4],
-      [12, 1],
-      [12, 2],
-      [12, 3],
-      [12, 4],
     ];
 
-    textPixels.forEach(([px, py], index) => {
-      let x = (px - 6) * spacing * scale;
-      let y = (py - 2) * spacing * scale;
-
-      // Add animation effects
-      if (animationMode === "wave") {
-        y += Math.sin(px * 0.5 + Date.now() * 0.005) * 0.1 * scale;
-      } else if (animationMode === "rotate") {
-        const centerX = 0;
-        const centerY = 0;
-        const rotateAngle = Date.now() * 0.002 + index * 0.1;
-        const newX =
-          (x - centerX) * Math.cos(rotateAngle) -
-          (y - centerY) * Math.sin(rotateAngle) +
-          centerX;
-        const newY =
-          (x - centerX) * Math.sin(rotateAngle) +
-          (y - centerY) * Math.cos(rotateAngle) +
-          centerY;
-        x = newX;
-        y = newY;
-      } else if (animationMode === "pulse") {
-        const pulseScale = 1 + Math.sin(Date.now() * 0.008 + index * 0.2) * 0.3;
-        x *= pulseScale;
-        y *= pulseScale;
-      }
-
-      points.push({ x, y });
+    customTextPoints.forEach(([px, py]) => {
+      const x = px * textScale;
+      const y = py * textScale;
+      points.push({ x, y, type: "text" });
     });
 
     return points;
@@ -2110,23 +2102,25 @@ class Shell {
           }
         });
       }
-      // Text pattern
-      else if (this.text) {
-        const textPoints = this.getTextPattern();
-        textPoints.forEach(({ x: px, y: py }) => {
+      // HeartName pattern - heart with text inside
+      else if (this.heartName) {
+        const heartNamePoints = this.getHeartNamePattern();
+        heartNamePoints.forEach(({ x: px, y: py, type }) => {
           const angle = MyMath.pointAngle(0, 0, px, py);
           const distance = MyMath.pointDist(0, 0, px, py) * speed;
+          const pointColor = type === "text" ? this.textColor : color;
+
           const star = Star.add(
             x,
             y,
-            color,
+            pointColor,
             angle,
             distance,
             this.starLife +
               Math.random() * this.starLife * this.starLifeVariation
           );
 
-          if (this.glitter) {
+          if (this.glitter && type === "heart") {
             star.sparkFreq = sparkFreq;
             star.sparkSpeed = sparkSpeed;
             star.sparkLife = sparkLife;
