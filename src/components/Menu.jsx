@@ -1,6 +1,6 @@
 import React from "react";
 
-const shellTypes = ["Random", "Crackle", "Palm", "Ring"];
+const shellTypes = ["Random", "Crackle", "Palm", "Ring", "Heart", "Text"];
 const shellSizes = [
   { value: "1", label: "Small" },
   { value: "2", label: "Normal" },

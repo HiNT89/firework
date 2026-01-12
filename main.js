@@ -758,6 +758,42 @@ const horsetailShell = (size = 1) => {
   };
 };
 
+const heartShell = (size = 1) => {
+  const color = Math.random() < 0.7 ? COLOR.Red : randomColor();
+  return {
+    shellSize: size,
+    heart: true,
+    color,
+    spreadSize: 280 + size * 90,
+    starDensity: 1.2,
+    starLife: 1200 + size * 200,
+    glitter: Math.random() < 0.3 ? "light" : "",
+    glitterColor: COLOR.White,
+    pistil: Math.random() < 0.4,
+    pistilColor: makePistilColor(color),
+  };
+};
+
+const textShell = (size = 1) => {
+  const color = randomColor({ limitWhite: true });
+  const animations = ["static", "wave", "rotate", "pulse"];
+  const randomAnimation =
+    animations[Math.floor(Math.random() * animations.length)];
+
+  return {
+    shellSize: size,
+    text: true,
+    textContent: "Hieu",
+    textAnimation: randomAnimation,
+    color,
+    spreadSize: 320 + size * 100,
+    starDensity: 1.0,
+    starLife: 1500 + size * 250,
+    glitter: Math.random() < 0.5 ? "light" : "",
+    glitterColor: whiteOrGold(),
+  };
+};
+
 function randomShellName() {
   return Math.random() < 0.5
     ? "Crysanthemum"
@@ -798,10 +834,12 @@ const shellTypes = {
   "Falling Leaves": fallingLeavesShell,
   Floral: floralShell,
   Ghost: ghostShell,
+  Heart: heartShell,
   "Horse Tail": horsetailShell,
   Palm: palmShell,
   Ring: ringShell,
   Strobe: strobeShell,
+  Text: textShell,
   Willow: willowShell,
 };
 
@@ -1788,6 +1826,111 @@ class Shell {
     soundManager.playSound("lift");
   }
 
+  getHeartPattern() {
+    const points = [];
+    const scale = 0.8 + this.shellSize * 0.2;
+
+    // Heart shape using parametric equations (corrected orientation)
+    for (let t = 0; t < PI_2; t += 0.1) {
+      const x = 16 * Math.pow(Math.sin(t), 3) * scale * 0.02;
+      const y =
+        (13 * Math.cos(t) -
+          5 * Math.cos(2 * t) -
+          2 * Math.cos(3 * t) -
+          Math.cos(4 * t)) *
+        scale *
+        0.02;
+      points.push({ x, y });
+    }
+
+    return points;
+  }
+
+  getTextPattern() {
+    const points = [];
+    const scale = 0.6 + this.shellSize * 0.15;
+    const spacing = 0.15;
+    const animationMode = this.textAnimation || "static";
+
+    // Simple pixel art for "Hieu" text
+    const textPixels = [
+      // H
+      [0, 0],
+      [0, 1],
+      [0, 2],
+      [0, 3],
+      [0, 4],
+      [1, 2],
+      [2, 0],
+      [2, 1],
+      [2, 2],
+      [2, 3],
+      [2, 4],
+
+      // i
+      [4, 0],
+      [4, 1],
+      [4, 2],
+      [4, 3],
+      [4, 4],
+
+      // e
+      [6, 1],
+      [6, 2],
+      [6, 3],
+      [6, 4],
+      [7, 1],
+      [7, 2],
+      [7, 4],
+      [8, 1],
+      [8, 2],
+      [8, 4],
+
+      // u
+      [10, 1],
+      [10, 2],
+      [10, 3],
+      [10, 4],
+      [11, 4],
+      [12, 1],
+      [12, 2],
+      [12, 3],
+      [12, 4],
+    ];
+
+    textPixels.forEach(([px, py], index) => {
+      let x = (px - 6) * spacing * scale;
+      let y = (py - 2) * spacing * scale;
+
+      // Add animation effects
+      if (animationMode === "wave") {
+        y += Math.sin(px * 0.5 + Date.now() * 0.005) * 0.1 * scale;
+      } else if (animationMode === "rotate") {
+        const centerX = 0;
+        const centerY = 0;
+        const rotateAngle = Date.now() * 0.002 + index * 0.1;
+        const newX =
+          (x - centerX) * Math.cos(rotateAngle) -
+          (y - centerY) * Math.sin(rotateAngle) +
+          centerX;
+        const newY =
+          (x - centerX) * Math.sin(rotateAngle) +
+          (y - centerY) * Math.cos(rotateAngle) +
+          centerY;
+        x = newX;
+        y = newY;
+      } else if (animationMode === "pulse") {
+        const pulseScale = 1 + Math.sin(Date.now() * 0.008 + index * 0.2) * 0.3;
+        x *= pulseScale;
+        y *= pulseScale;
+      }
+
+      points.push({ x, y });
+    });
+
+    return points;
+  }
+
   burst(x, y) {
     // Set burst speed so overall burst grows to set size. This specific formula was derived from testing, and is affected by simulated air drag.
     const speed = this.spreadSize / 96;
@@ -1927,6 +2070,58 @@ class Shell {
             // apply near cubic falloff to speed (places more particles towards outside)
             newSpeed, //speed,
             // add minor variation to star life
+            this.starLife +
+              Math.random() * this.starLife * this.starLifeVariation
+          );
+
+          if (this.glitter) {
+            star.sparkFreq = sparkFreq;
+            star.sparkSpeed = sparkSpeed;
+            star.sparkLife = sparkLife;
+            star.sparkLifeVariation = sparkLifeVariation;
+            star.sparkColor = this.glitterColor;
+            star.sparkTimer = Math.random() * star.sparkFreq;
+          }
+        });
+      }
+      // Heart shape pattern
+      else if (this.heart) {
+        const heartPoints = this.getHeartPattern();
+        heartPoints.forEach(({ x: px, y: py }) => {
+          const angle = MyMath.pointAngle(0, 0, px, py);
+          const distance = MyMath.pointDist(0, 0, px, py) * speed;
+          const star = Star.add(
+            x,
+            y,
+            color,
+            angle,
+            distance,
+            this.starLife +
+              Math.random() * this.starLife * this.starLifeVariation
+          );
+
+          if (this.glitter) {
+            star.sparkFreq = sparkFreq;
+            star.sparkSpeed = sparkSpeed;
+            star.sparkLife = sparkLife;
+            star.sparkLifeVariation = sparkLifeVariation;
+            star.sparkColor = this.glitterColor;
+            star.sparkTimer = Math.random() * star.sparkFreq;
+          }
+        });
+      }
+      // Text pattern
+      else if (this.text) {
+        const textPoints = this.getTextPattern();
+        textPoints.forEach(({ x: px, y: py }) => {
+          const angle = MyMath.pointAngle(0, 0, px, py);
+          const distance = MyMath.pointDist(0, 0, px, py) * speed;
+          const star = Star.add(
+            x,
+            y,
+            color,
+            angle,
+            distance,
             this.starLife +
               Math.random() * this.starLife * this.starLifeVariation
           );
