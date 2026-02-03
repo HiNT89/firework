@@ -5,7 +5,15 @@ export default defineConfig({
   plugins: [react()],
   server: {
     port: 3000,
+    host: true, // This allows external access
     open: true,
+  },
+  css: {
+    preprocessorOptions: {
+      scss: {
+        api: 'modern-compiler' // Use modern Sass API
+      }
+    }
   },
   build: {
     outDir: "dist",
